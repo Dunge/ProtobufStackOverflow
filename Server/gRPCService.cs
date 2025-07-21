@@ -17,9 +17,30 @@ namespace Server
             _logger = logger;
         }
 
-        public Task SendFoo(Model foo, CallContext context)
+        public IAsyncEnumerable<Callback> SubscribeToCallback(CallContext context = default) => SubscribeToCallback(context.CancellationToken, context);
+
+        private async IAsyncEnumerable<Callback> SubscribeToCallback([EnumeratorCancellation] CancellationToken cancel, CallContext context = default)
         {
-            return Task.CompletedTask;
+            int cnt = 0;
+            var timerTask = Task.Delay(1000, cancel); // send a string every second
+            while (!cancel.IsCancellationRequested)
+            {
+                try
+                {
+                    await timerTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Normal, client disconnected
+                    yield break;
+                }
+
+                if (!cancel.IsCancellationRequested)
+                {
+                    yield return new Callback { Text = $"New counter: {cnt++}" };
+                    timerTask = Task.Delay(1000, cancel);
+                }
+            }
         }
     }
 }

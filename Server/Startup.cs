@@ -43,9 +43,11 @@ namespace Server
 
             app.UseAuthorization();
 
+            app.UseGrpcWeb();
+
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<gRPCService>();
+                endpoints.MapGrpcService<gRPCService>().EnableGrpcWeb();
                 endpoints.MapCodeFirstGrpcReflectionService();
             });
         }
